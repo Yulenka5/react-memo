@@ -1,10 +1,12 @@
 import { shuffle } from "lodash";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { generateDeck } from "../../utils/cards";
 import styles from "./Cards.module.css";
 import { EndGameModal } from "../../components/EndGameModal/EndGameModal";
 import { Button } from "../../components/Button/Button";
 import { Card } from "../../components/Card/Card";
+import { LivesContext } from "../context/livesContext";
+import { EasyModeContext } from "../context/easymodeContext";
 
 // Игра закончилась
 const STATUS_LOST = "STATUS_LOST";
@@ -50,6 +52,11 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
   const [gameStartDate, setGameStartDate] = useState(null);
   // Дата конца игры
   const [gameEndDate, setGameEndDate] = useState(null);
+  //Режим трех попыток
+  const { easyMode } = useContext(EasyModeContext);
+  console.log(easyMode);
+  //Счетчик жизней
+  const { lives, setLives } = useContext(LivesContext);
 
   // Стейт для таймера, высчитывается в setInteval на основе gameStartDate и gameEndDate
   const [timer, setTimer] = useState({
@@ -73,6 +80,7 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
     setGameEndDate(null);
     setTimer(getTimerValue(null, null));
     setStatus(STATUS_PREVIEW);
+    setLives(3);
   }
 
   /**
@@ -126,12 +134,30 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
     const playerLost = openCardsWithoutPair.length >= 2;
 
     // "Игрок проиграл", т.к на поле есть две открытые карты без пары
-    if (playerLost) {
+    if (playerLost && !easyMode) {
       finishGame(STATUS_LOST);
       return;
     }
 
     // ... игра продолжается
+    if (playerLost && easyMode) {
+      setLives(lives - 1);
+      nextCards.map(card => {
+        if (openCardsWithoutPair.some(opencard => opencard.id === card.id)) {
+          if (card.open) {
+            setTimeout(() => {
+              setCards(prev => {
+                return prev.map(el => (el.id === card.id ? { ...el, open: false } : el));
+              });
+            }, 1000);
+          }
+        }
+      });
+      if (lives === 1) {
+        finishGame(STATUS_LOST);
+        return;
+      }
+    }
   };
 
   const isGameEnded = status === STATUS_LOST || status === STATUS_WON;
@@ -164,6 +190,8 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
 
   // Обновляем значение таймера в интервале
   useEffect(() => {
+    if (status === STATUS_LOST || status === STATUS_WON) return;
+
     const intervalId = setInterval(() => {
       setTimer(getTimerValue(gameStartDate, gameEndDate));
     }, 300);
@@ -209,6 +237,7 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
           />
         ))}
       </div>
+      {easyMode ? <p className={styles.subtitle}>Осталось попыток: {lives}</p> : ""}
 
       {isGameEnded ? (
         <div className={styles.modalContainer}>
