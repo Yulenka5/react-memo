@@ -7,6 +7,7 @@ import { Button } from "../../components/Button/Button";
 import { Card } from "../../components/Card/Card";
 import { LivesContext } from "../context/livesContext";
 import { EasyModeContext } from "../context/easymodeContext";
+import { CardsContext } from "../context/cardsContext";
 
 // Игра закончилась
 const STATUS_LOST = "STATUS_LOST";
@@ -44,7 +45,7 @@ function getTimerValue(startDate, endDate) {
  */
 export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
   // В cards лежит игровое поле - массив карт и их состояние открыта\закрыта
-  const [cards, setCards] = useState([]);
+  const { cards, setCards } = useContext(CardsContext);
   // Текущий статус игры
   const [status, setStatus] = useState(STATUS_PREVIEW);
 
@@ -246,6 +247,8 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
             gameDurationSeconds={timer.seconds}
             gameDurationMinutes={timer.minutes}
             onClick={resetGame}
+            pairsCount={pairsCount}
+            timer={timer}
           />
         </div>
       ) : null}
