@@ -8,6 +8,8 @@ import { Card } from "../../components/Card/Card";
 import { LivesContext } from "../context/livesContext";
 import { EasyModeContext } from "../context/easymodeContext";
 import { CardsContext } from "../context/cardsContext";
+import epiphany from "./images/epiphany.png";
+import alohomora from "./images/alohomora.png";
 
 // Игра закончилась
 const STATUS_LOST = "STATUS_LOST";
@@ -59,6 +61,10 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
   //Счетчик жизней
   const { lives, setLives } = useContext(LivesContext);
 
+  // const [isActivEpiphany, setIsActivEpiphany] = useState(false);
+
+  const [isActivAlohomora, setIsActivAlohomora] = useState(false);
+
   // Стейт для таймера, высчитывается в setInteval на основе gameStartDate и gameEndDate
   const [timer, setTimer] = useState({
     seconds: 0,
@@ -82,6 +88,7 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
     setTimer(getTimerValue(null, null));
     setStatus(STATUS_PREVIEW);
     setLives(3);
+    setIsActivAlohomora(false);
   }
 
   /**
@@ -124,7 +131,6 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
     // Ищем открытые карты, у которых нет пары среди других открытых
     const openCardsWithoutPair = openCards.filter(card => {
       const sameCards = openCards.filter(openCard => card.suit === openCard.suit && card.rank === openCard.rank);
-
       if (sameCards.length < 2) {
         return true;
       }
@@ -199,7 +205,29 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
     return () => {
       clearInterval(intervalId);
     };
-  }, [gameStartDate, gameEndDate]);
+  }, [gameStartDate, gameEndDate, status]);
+
+  const onAlohomora = () => {
+    setIsActivAlohomora(true);
+    const firstCard = cards.find(card => card.open === false);
+    const newCards = cards.map(card => {
+      return card.suit === firstCard.suit && card.rank === firstCard.rank ? { ...card, open: true } : card;
+    });
+    const isGameOver = newCards.some(item => !item.open);
+    setCards(newCards);
+    if (!isGameOver) {
+      finishGame(STATUS_WON);
+    }
+  };
+
+  const achievements = [];
+
+  if (!easyMode) {
+    achievements.push(1);
+  }
+  if (!isActivAlohomora) {
+    achievements.push(2);
+  }
 
   return (
     <div className={styles.container}>
@@ -224,9 +252,45 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
             </>
           )}
         </div>
+        {status === STATUS_PREVIEW ? (
+          ""
+        ) : (
+          <div className={styles.superPowersContainer}>
+            {/*<div>*/}
+            {/*  <div className={styles.wrapper}>*/}
+            {/*    <img*/}
+            {/*      className={isActivEpiphany ? styles.disabledEpiphany : styles.superPowerImg}*/}
+            {/*      src={epiphany}*/}
+            {/*      alt=""*/}
+            {/*    />*/}
+            {/*    <div className={styles.bubble}>*/}
+            {/*      <h4 className={styles.title}>Прозрение</h4>*/}
+            {/*      <p className={styles.description}>*/}
+            {/*        На 5 секунд показываются все карты. Таймер длительности игры на это время останавливается.*/}
+            {/*      </p>*/}
+            {/*    </div>*/}
+            {/*  </div>*/}
+            {/*  <div className={styles.layout}></div>*/}
+            {/*</div>*/}
+            <div className={styles.wrapper}>
+              <img
+                onClick={onAlohomora}
+                className={isActivAlohomora ? styles.disabledEpiphany : styles.superPowerImg}
+                src={alohomora}
+                alt=""
+              />
+              <div className={styles.layout}></div>
+              <div className={styles.bubble}>
+                <h4 className={styles.title}>Алохомора</h4>
+                <p className={styles.description}>Открывается случайная пара карт.</p>
+              </div>
+            </div>
+            <div className={styles.layout}></div>
+          </div>
+        )}
+
         {status === STATUS_IN_PROGRESS ? <Button onClick={resetGame}>Начать заново</Button> : null}
       </div>
-
       <div className={styles.cards}>
         {cards.map(card => (
           <Card
@@ -239,7 +303,6 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
         ))}
       </div>
       {easyMode ? <p className={styles.subtitle}>Осталось попыток: {lives}</p> : ""}
-
       {isGameEnded ? (
         <div className={styles.modalContainer}>
           <EndGameModal
@@ -249,6 +312,7 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
             onClick={resetGame}
             pairsCount={pairsCount}
             timer={timer}
+            achievements={achievements}
           />
         </div>
       ) : null}
