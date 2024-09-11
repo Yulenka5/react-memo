@@ -9,7 +9,7 @@ export const LeadersProvider = ({ children }) => {
   useEffect(() => {
     getLeaders().then(leaders => {
       const sortedLeaders = sortLeadersElements(leaders.leaders);
-      setLeaders(sortedLeaders.splice(1, 10));
+      setLeaders(sortedLeaders.splice(0, 10));
     });
   }, []);
   return <LeadersContext.Provider value={{ leaders, setLeaders }}>{children}</LeadersContext.Provider>;
