@@ -2,7 +2,7 @@ import styles from "./Leaderboard.module.css";
 import vectorImageUrl from "./images/vector.png";
 import vectorActiveImageUrl from "./images/vector-active.png";
 import magicBallImageUrl from "./images/magic-ball.png";
-import magicActiveBallImageUrl from "./images/vector-active.png";
+import magicActiveBallImageUrl from "./images/magic-ball-active.png";
 import superPowers from "./images/super-powers.png";
 import hardMode from "./images/hard-mode.png";
 
